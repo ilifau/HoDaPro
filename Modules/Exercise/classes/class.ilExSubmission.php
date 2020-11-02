@@ -772,8 +772,16 @@ class ilExSubmission
                             $file["filetitle"]["lastname"] . " (" .
                             $file["filetitle"]["login"] . ").zip";
                         break;
+					case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+						$file["filetitle"] = ilObjUser::_lookupName($file["user_id"]);
+						$file["filetitle"] = ilObject::_lookupTitle($this->assignment->getExerciseId()) . " - " .
+							$this->assignment->getTitle() . " - " .
+							$file["filetitle"]["firstname"] . " " .
+							$file["filetitle"]["lastname"] . " (" .
+							$file["filetitle"]["login"] . ").zip";
+						break;
 
-                    // @todo: generalize
+					// @todo: generalize
                     case ilExAssignment::TYPE_WIKI_TEAM:
                         $file["filetitle"] = ilObject::_lookupTitle($this->assignment->getExerciseId()) . " - " .
                             $this->assignment->getTitle() . " (Team " . $this->getTeam()->getId() . ").zip";
@@ -1437,6 +1445,26 @@ class ilExSubmission
                     }
                 }
                 break;
+
+			case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+				$result["files"]["txt"] = $lng->txt("exc_portfolio_returned");
+				$portfolios = $this->getFiles();
+				if ($portfolios) {
+					$portfolios = array_pop($portfolios);
+					if ($portfolios && substr($portfolios["filename"], -1) != "/") {
+						if ($portfolios["late"]) {
+							$result["files"]["txt"] .= ' - <span class="warning">' . $lng->txt("exc_late_submission") . "</span>";
+						}
+
+						$result["files"]["count"] = 1;
+
+						$result["files"]["download_url"] =
+							$ilCtrl->getLinkTargetByClass("ilexsubmissionfilegui", "downloadReturned");
+
+						$result["files"]["download_txt"] = $lng->txt("exc_tbl_action_download_files");
+					}
+				}
+				break;
                 
             case ilExAssignment::TYPE_TEXT:
                 $result["files"]["txt"] = $lng->txt("exc_files_returned_text");

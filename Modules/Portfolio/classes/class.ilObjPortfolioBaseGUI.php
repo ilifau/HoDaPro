@@ -223,11 +223,11 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         }
 
         $section = new ilFormSectionHeaderGUI();
-        $section->setTitle($this->lng->txt('obj_features'));
+        $section->setTitle("Feedback Einstellungen");
         $a_form->addItem($section);
 
         // comments
-        $comments = new ilCheckboxInputGUI($this->lng->txt("prtf_public_comments"), "comments");
+        $comments = new ilCheckboxInputGUI("privates Feedback zulassen", "comments");
         $a_form->addItem($comments);
 
         /* #15000
@@ -299,15 +299,17 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $button->setUrl($this->ctrl->getLinkTarget($this, "addPage"));
         $ilToolbar->addStickyItem($button);
 
+        /*
         if (!$ilSetting->get('disable_wsp_blogs')) {
             $button = ilLinkButton::getInstance();
             $button->setCaption("prtf_add_blog");
             $button->setUrl($this->ctrl->getLinkTarget($this, "addBlog"));
             $ilToolbar->addStickyItem($button);
-        }
+        }*/
 
 
         // #16571
+		/*
         if ($this->getType() == "prtf") {
             $ilToolbar->addSeparator();
 
@@ -320,7 +322,7 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
             $button->setCaption("prtf_pdf");
             $button->setUrl($this->ctrl->getLinkTarget($this, "exportPDFSelection"));
             $ilToolbar->addButtonInstance($button);
-        }
+        }*/
         
         $table = new ilPortfolioPageTableGUI($this, "view");
         
@@ -360,30 +362,32 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ctrl->getFormAction($this));
 
-        // title
-        $ti = new ilTextInputGUI($this->lng->txt("title"), "title");
-        $ti->setMaxLength(200);
-        $ti->setRequired(true);
-        $form->addItem($ti);
+		if($_REQUEST["cmd"] == "addPage" AND $_REQUEST["cmdClass"] == "ilobjportfoliogui") {
+			// title
+			$ti = new ilHiddenInputGUI("title");
+			$ti->setValue("placeholder");
+			$form->addItem($ti);
+		}else{
+			// title
+			$ti = new ilTextInputGUI($this->lng->txt("title"), "title");
+			$ti->setMaxLength(200);
+			$ti->setRequired(true);
+			$form->addItem($ti);
+		}
 
         // save and cancel commands
         if ($a_mode == "create") {
-            $templates = ilPageLayout::activeLayouts(false, ilPageLayout::MODULE_PORTFOLIO);
-            if ($templates) {
-                $use_template = new ilRadioGroupInputGUI($this->lng->txt("prtf_use_page_layout"), "tmpl");
-                $use_template->setRequired(true);
-                $form->addItem($use_template);
+        	if($_REQUEST["cmdClass"] != "ilobjportfoliotemplategui"){
+				$templates = ilObjPortfolioTemplate::getAvailablePortfolioTemplates();
+				if (!sizeof($templates)) {
 
-                $opt = new ilRadioOption($this->lng->txt("none"), 0);
-                $use_template->addOption($opt);
-
-                foreach ($templates as $templ) {
-                    $templ->readObject();
-
-                    $opt = new ilRadioOption($templ->getTitle() . $templ->getPreview(), $templ->getId());
-                    $use_template->addOption($opt);
-                }
-            }
+				} else {
+					$tmpl = new ilSelectInputGUI($this->lng->txt("obj_prtt"), "prtt");
+					$tmpl->setRequired(true);
+					$tmpl->setOptions(array("" => $this->lng->txt("please_select")) + $templates);
+					$form->addItem($tmpl);
+				}
+			}
             
             $form->setTitle($this->lng->txt("prtf_add_page") . ": " .
                 $this->object->getTitle());
@@ -407,18 +411,32 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
     {
         $form = $this->initPageForm("create");
         if ($form->checkInput() && $this->checkPermissionBool("write")) {
-            $page = $this->getPageInstance();
-            $page->setType(ilPortfolioPage::TYPE_PAGE);
-            $page->setTitle($form->getInput("title"));
+
+			if($form->getInput("prtt")) {
+				$info = explode("_", $form->getInput("prtt"));
+				$page_id = $info[1];
+				$portfolio_id = $info[0];
+
+				$source = new ilObjPortfolioTemplate($portfolio_id, false);
+				$source->clonePagesAndSettings($source, $this->object, array(), false, $page_id);
+
+				// link portfolio to exercise assignment
+				$this->linkPortfolioToAssignment($this->object->getId());
+			}else{
+				$page = $this->getPageInstance();
+				$page->setType(ilPortfolioPage::TYPE_PAGE);
+				$page->setTitle($form->getInput("title"));
+				// use template as basis
+				$layout_id = $form->getInput("tmpl");
+				if ($layout_id) {
+					$layout_obj = new ilPageLayout($layout_id);
+					$page->setXMLContent($layout_obj->getXMLContent());
+				}
+
+				$page->create();
+			}
             
-            // use template as basis
-            $layout_id = $form->getInput("tmpl");
-            if ($layout_id) {
-                $layout_obj = new ilPageLayout($layout_id);
-                $page->setXMLContent($layout_obj->getXMLContent());
-            }
-            
-            $page->create();
+
 
             ilUtil::sendSuccess($this->lng->txt("prtf_page_created"), true);
             $this->ctrl->redirect($this, "view");
@@ -634,22 +652,34 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         // render tabs
         $current_blog = null;
         if (count($pages) > 1) {
-            foreach ($pages as $p) {
-                if ($p["type"] == ilPortfolioPage::TYPE_BLOG) {
-                    // needed for blog comments (see below)
-                    if ($p["id"] == $current_page) {
-                        $current_blog = (int) $p["title"];
-                    }
-                    $p["title"] = ilObjBlog::_lookupTitle($p["title"]);
-                }
-                
-                $this->ctrl->setParameter($this, "user_page", $p["id"]);
-                $this->tabs_gui->addTab(
-                    "user_page_" . $p["id"],
-                    $p["title"],
-                    $this->ctrl->getLinkTarget($this, "preview")
-                );
-            }
+			$shared_page = (int) ilPortfolioAccessHandler::getExtendedData($portfolio_id);
+
+			if($shared_page != null AND $_REQUEST["baseClass"] == "ilsharedresourceGUI"){
+				$this->ctrl->setParameter($this, "user_page", $shared_page);
+				$this->tabs_gui->addTab(
+					"user_page_" . $shared_page,
+					ilPortfolioPage::lookupTitle($shared_page),
+					$this->ctrl->getLinkTarget($this, "preview")
+				);
+			}else{
+				foreach ($pages as $p) {
+					if ($p["type"] == ilPortfolioPage::TYPE_BLOG) {
+						// needed for blog comments (see below)
+						if ($p["id"] == $current_page) {
+							$current_blog = (int) $p["title"];
+						}
+						$p["title"] = ilObjBlog::_lookupTitle($p["title"]);
+					}
+
+					$this->ctrl->setParameter($this, "user_page", $p["id"]);
+					$this->tabs_gui->addTab(
+						"user_page_" . $p["id"],
+						$p["title"],
+						$this->ctrl->getLinkTarget($this, "preview")
+					);
+				}
+			}
+
             
             $this->tabs_gui->activateTab("user_page_" . $current_page);
         }

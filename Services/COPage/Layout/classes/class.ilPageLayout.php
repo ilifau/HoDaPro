@@ -31,7 +31,7 @@ class ilPageLayout
     public $active = null;
     public $modules = array();
     
-    public function __construct($a_id = null)
+    public function __construct($a_id = null, $prtf_id = null, $page_id = null)
     {
         global $DIC;
 

@@ -191,13 +191,15 @@ class ilPortfolioRepositoryGUI
         $lng = $this->lng;
         $ilToolbar = $this->toolbar;
         $ilCtrl = $this->ctrl;
-        
-        $button = ilLinkButton::getInstance();
-        $button->setCaption("prtf_add_portfolio");
-        $button->setUrl($ilCtrl->getLinkTargetByClass("ilObjPortfolioGUI", "create"));
-        $ilToolbar->addButtonInstance($button);
-        $portfolio_list = $this->getPortfolioList();
 
+        if(empty(ilObjPortfolio::getPortfoliosOfUser($this->user_id))){
+			$button = ilLinkButton::getInstance();
+			$button->setCaption("prtf_add_portfolio");
+			$button->setUrl($ilCtrl->getLinkTargetByClass("ilObjPortfolioGUI", "create"));
+			$ilToolbar->addButtonInstance($button);
+		};
+
+		$portfolio_list = $this->getPortfolioList();
         $tpl->setContent($portfolio_list . ilDiskQuotaHandler::getStatusLegend());
     }
 
@@ -265,11 +267,12 @@ class ilPortfolioRepositoryGUI
                 $ctrl->getLinkTargetByClass($prtf_path, "edit")
             );
             //	... sharing
+			/*
             $action[] = $f->button()->shy(
                 $lng->txt("wsp_permissions"),
                 $ctrl->getLinkTargetByClass(array(get_class($this), "ilobjportfoliogui", "ilWorkspaceAccessGUI"), "share")
             );
-            $ctrl->setParameterByClass("ilobjportfoliogui", "prt_id", "");
+            $ctrl->setParameterByClass("ilobjportfoliogui", "prt_id", "");*/
 
             if ($port["is_online"]) {
                 if (!$port["is_default"]) {
@@ -585,7 +588,7 @@ class ilPortfolioRepositoryGUI
         
         $ilTabs->activateTab("otpf");
         
-        $tbl = new ilWorkspaceShareTableGUI($this, "showOther", $this->access_handler, null, $a_load_data);
+        $tbl = new ilWorkspaceShareTableGUI($this, "showOther", $this->access_handler, null, true);
         $tpl->setContent($tbl->getHTML());
     }
     

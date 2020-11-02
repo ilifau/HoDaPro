@@ -53,6 +53,8 @@ class ilExAssignment
      * @deprecated
      */
     const TYPE_WIKI_TEAM = 6;
+
+	const TYPE_PORTFOLIO_PAGE = 7;
     
     const FEEDBACK_DATE_DEADLINE = 1;
     const FEEDBACK_DATE_SUBMISSION = 2;

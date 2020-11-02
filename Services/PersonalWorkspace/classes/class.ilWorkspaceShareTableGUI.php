@@ -283,16 +283,24 @@ class ilWorkspaceShareTableGUI extends ilTable2GUI
         $this->tpl->setVariable("LOGIN", $node["login"]);
                             
         $this->tpl->setVariable("TITLE", $node["title"]);
-                
-        if (!$this->portfolio_mode) {
-            $this->tpl->setVariable("TYPE", $node["obj_type"]);
-            $this->tpl->setVariable("ICON_ALT", $node["obj_type"]);
-            $this->tpl->setVariable("ICON", ilObject::_getIcon("", "tiny", $node["type"]));
-            
-            $url = $this->handler->getGotoLink($node["wsp_id"], $node["obj_id"]);
-        } else {
-            $url = ilLink::_getStaticLink($node["obj_id"], "prtf", true);
-        }
+
+		if (!$this->portfolio_mode) {
+			$this->tpl->setVariable("TYPE", $node["obj_type"]);
+			$this->tpl->setVariable("ICON_ALT", $node["obj_type"]);
+			$this->tpl->setVariable("ICON", ilObject::_getIcon("", "tiny", $node["type"]));
+
+			$url = $this->handler->getGotoLink($node["wsp_id"], $node["obj_id"]);
+		} else {
+			//Fau:Einzelne Portfolio-Seiten Freigeben
+			$page = ilPortfolioAccessHandler::getExtendedData($node["obj_id"]);
+			if($page){
+				$this->tpl->setVariable("TITLE", $node["title"]. " / " .ilPortfolioPage::lookupTitle($node["wsp_id"]));
+			}else{
+				$this->tpl->setVariable("TITLE", $node["title"]);
+			}
+			$url = ilLink::_getStaticLink($node["obj_id"], "prtf", true, "_".$node["wsp_id"]);
+			//fau.
+		}
         $this->tpl->setVariable("URL_TITLE", $url);
         
         $this->tpl->setVariable(

@@ -207,7 +207,8 @@ class ilObjPortfolioTemplateGUI extends ilObjPortfolioBaseGUI
         $ilTabs->activateTab("id_info");
 
         $this->checkPermission("visible");
-    
+
+        /*
         if ($this->checkPermissionBool("read")) {
             $this->lng->loadLanguageModule("cntr");
             
@@ -216,7 +217,7 @@ class ilObjPortfolioTemplateGUI extends ilObjPortfolioBaseGUI
             $button->setCaption("prtf_create_portfolio_from_template");
             $button->setUrl($this->ctrl->getLinkTarget($this, "createfromtemplate"));
             $ilToolbar->addButtonInstance($button);
-        }
+        }*/
                 
         $info = new ilInfoScreenGUI($this);
 

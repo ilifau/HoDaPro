@@ -424,7 +424,9 @@ class ilExerciseManagementGUI
                 if ($ass_type == ilExAssignment::TYPE_TEXT) {
                     $ilToolbar->addFormButton($lng->txt("exc_list_text_assignment"), "listTextAssignment");
                 }
-                $ilToolbar->addFormButton($lng->txt("download_all_returned_files"), "downloadSubmissions");
+                //$ilToolbar->addFormButton($lng->txt("download_all_returned_files"), "downloadSubmissions");
+				//$ilToolbar->addSeparator();
+				//$ilToolbar->addFormButton("Abgegebenen Seiten Download", "downloadPageSubmissions");
             }
             $this->ctrl->setParameter($this, "vw", self::VIEW_ASSIGNMENT);
             
@@ -464,6 +466,11 @@ class ilExerciseManagementGUI
             $this->ctrl->redirect($this, "showParticipant");
         }
     }
+
+	public function downloadPageSubmissionsObject()
+	{
+		echo "JESUS: NEED MORE INFO ABOUT THE FORMAT DESIRED FOR THE PAGES";exit;
+	}
     
     public function membersApplyObject()
     {

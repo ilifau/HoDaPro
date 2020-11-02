@@ -603,6 +603,11 @@ class ilExPeerReviewGUI
             );
             $item->addToPeerReviewForm($values[$crit_id]);
         }
+
+        //Fau
+		$page_obj = new ilNonEditableValueGUI("Seite", "page_id");
+
+        $form->addItem($page_obj);
         
         $form->addCommandButton("updatePeerReview", $lng->txt("save"));
         $form->addCommandButton("editPeerReview", $lng->txt("cancel"));

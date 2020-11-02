@@ -166,10 +166,31 @@ class ilPortfolioPageGUI extends ilPageObjectGUI
                 
             default:
                 $this->setTemplateOutput(false);
-                // $this->setPresentationTitle($this->getPageObject()->getTitle());
+                $this->setPageBackTitle($this->getPageObject()->getTitle());
+                $this->setPresentationTitle($this->getPageObject()->getTitle());
                 $output = parent::showPage();
 
+                //fau: Einzelne Portfolio-Seiten Freigeben
+				if ($ilUser->getId() == ilObjPortfolio::_lookupOwner($this->portfolio_id)){
+					//Not shown in preview only editing
+					if($_REQUEST["cmd"]=="preview" AND $_REQUEST["cmdClass"] != "ilportfoliotemplatepagegui" AND $_REQUEST["cmdClass"] != "ilrepositorygui" AND $_REQUEST["cmdClass"] != "ilobjportfoliotemplategui"){
+						$portfolio = ilObjPortfolio::getPortfoliosOfUser($ilUser->getId());
+						if(isset($portfolio[0]["is_online"])){
+							if($portfolio[0]["is_online"] == "1"){
+								global $DIC;
+								$toolbar = $DIC->toolbar();
+								$button = ilLinkButton::getInstance();
+								$button->setCaption("share");
+								$button->setUrl($this->ctrl->getLinkTargetByClass("ilworkspaceaccessgui", "sharePage"));
+
+								$toolbar->addButtonInstance($button);
+							}else{
+							}
+						}
+					}
+				}
                 return $output;
+                //fau.
         }
     }
 
@@ -1191,4 +1212,12 @@ class ilPortfolioPageGUI extends ilPageObjectGUI
 
         return '<div><a href="' . $url . '">' . $caption . '</a></div>';
     }
+
+	/**
+	 * //fau: Einzelne Portfolio-Seiten Freigeben redirect to ilObjPortfolio.
+	 */
+    public function sharePage(){
+    	$portfolio = new ilObjPortfolioGUI(ilPortfolioPage::findPortfolioForPage((int) $_REQUEST["user_page"]));
+    	$portfolio->sharePage((int) $_REQUEST["user_page"]);
+	}
 }

@@ -185,7 +185,12 @@ class ilObjPortfolioTemplate extends ilObjPortfolioBase
             }
             
             if ($has_permission) {
-                $res[$obj["obj_id"]] = $obj["title"];
+            	//fau: Vorlagen für Portfolio-Seiten Add Pages separately
+                //$res[$obj["obj_id"]] = "Voll Portfolio - ".$obj["title"];
+                foreach(ilPortfolioPage::getAllPortfolioPages((int) $obj["obj_id"]) as $page){
+					$res[$obj["obj_id"]."_".$page["id"]] = "Seite - ".$page["title"];
+				}
+                //fau.
             }
         }
         

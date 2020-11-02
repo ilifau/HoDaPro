@@ -43,6 +43,8 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
             
             case ilExAssignment::TYPE_PORTFOLIO:
                 return self::getOverviewContentPortfolio($a_info, $a_submission);
+			case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+				return self::getOverviewContentPortfolioPage($a_info, $a_submission);
         }
     }
     
@@ -166,11 +168,12 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
         }
         if ($a_submission->canSubmit()) {
             if (!$valid_prtf) {
+            	/*
                 $button = ilLinkButton::getInstance();
                 $button->setCaption("exc_create_portfolio");
                 $button->setUrl($ilCtrl->getLinkTargetByClass(array("ilExSubmissionGUI", "ilExSubmissionObjectGUI"), "createPortfolioFromAssignment"));
 
-                $buttons_str .= "" . $button->render();
+                $buttons_str .= "" . $button->render();*/
             }
             // #10462
             //selectPortfolio ( remove it? )
@@ -208,6 +211,86 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
             $a_info->addProperty($lng->txt("exc_files_returned"), $button->render());
         }
     }
+
+	protected static function getOverviewContentPortfolioPage(ilInfoScreenGUI $a_info, ilExSubmission $a_submission)
+	{
+		global $DIC;
+
+		$lng = $DIC->language();
+		$ilCtrl = $DIC->ctrl();
+
+		$files_str = "";
+		$buttons_str = "";
+		$valid_prtf = false;
+		$selected_prtf = $a_submission->getSelectedObject();
+		if ($selected_prtf) {
+			$portfolio_id = (int) $selected_prtf["filetitle"];
+
+			// #11746
+			if (ilObject::_exists($portfolio_id, false, "prtf")) {
+				$portfolio = new ilObjPortfolio($portfolio_id, false);
+				if ($portfolio->getTitle()) {
+					// #10116 / #12791
+					$ilCtrl->setParameterByClass("ilobjportfoliogui", "prt_id", $portfolio_id);
+
+					$ref_id = $_REQUEST['ref_id'];
+					$ilCtrl->setParameterByClass("ilobjportfoliogui", "ref_id", $ref_id);
+
+					$ilCtrl->setParameterByClass("ilobjportfoliogui", "exc_back_ref_id", (int) $_GET["ref_id"]);
+
+					$prtf_link = $ilCtrl->getLinkTargetByClass(array("ildashboardgui", "ilportfoliorepositorygui", "ilobjportfoliogui"), "view");
+					$ilCtrl->setParameterByClass("ilobjportfoliogui", "prt_id", "");
+					$ilCtrl->setParameterByClass("ilobjportfoliogui", "ref_id", "");
+
+
+					$files_str = '<a href="' . $prtf_link .
+						'">' . $portfolio->getTitle() . '</a>';
+					$valid_prtf = true;
+				}
+			}
+			// remove invalid resource if no upload yet (see download below)
+			elseif (substr($selected_prtf["filename"], -1) == "/") {
+				// #16887
+				$a_submission->deleteResourceObject($selected_prtf["returned_id"]);
+			}
+		}
+		if ($a_submission->canSubmit()) {
+			// #10462
+			//selectPortfolio ( remove it? )
+			$prtfs = sizeof(ilObjPortfolio::getPortfoliosOfUser($a_submission->getUserId()));
+			if ((!$valid_prtf && $prtfs)
+				|| ($valid_prtf && $prtfs > 1)) {
+				$button = ilLinkButton::getInstance();
+				$button->setCaption("exc_select_portfolio" . ($valid_prtf ? "_change" : ""));
+				$button->setUrl($ilCtrl->getLinkTargetByClass(array("ilExSubmissionGUI", "ilExSubmissionObjectGUI"), "selectPortfolioPage"));
+				$buttons_str .= " " . $button->render();
+			}
+			if ($valid_prtf) {
+				$button = ilLinkButton::getInstance();
+				$button->setCaption("exc_select_portfolio" . ($valid_prtf ? "_unlink" : ""));
+				$button->setUrl($ilCtrl->getLinkTargetByClass(array("ilExSubmissionGUI", "ilExSubmissionObjectGUI"), "askUnlinkPortfolio"));
+				$buttons_str .= " " . $button->render();
+			}
+		}
+		// todo: move this to ks somehow
+		if ($buttons_str != "") {
+			$files_str .= "<p>" . $buttons_str . "</p>";
+		}
+		if ($files_str) {
+			$a_info->addProperty($lng->txt("exc_portfolio_returned"), $files_str);
+		}
+		if ($a_submission->hasSubmitted()) {
+			$ilCtrl->setParameterByClass("ilExSubmissionFileGUI", "delivered", $selected_prtf["returned_id"]);
+			$dl_link = $ilCtrl->getLinkTargetByClass(array("ilExSubmissionGUI", "ilExSubmissionFileGUI"), "download");
+			$ilCtrl->setParameterByClass("ilExSubmissionFileGUI", "delivered", "");
+
+			$button = ilLinkButton::getInstance();
+			$button->setCaption("download");
+			$button->setUrl($dl_link);
+
+			$a_info->addProperty($lng->txt("exc_files_returned"), $button->render());
+		}
+	}
     
     protected function renderResourceSelection($a_title, $a_info, $a_cmd, $a_explorer_cmd, array $a_items = null)
     {
@@ -386,6 +469,31 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
             $items
         );
     }
+
+	protected function selectPortfolioPageObject()
+	{
+		$this->handleTabs();
+
+		$items = array();
+		$portfolios = ilObjPortfolio::getPortfoliosOfUser($this->submission->getUserId());
+		if ($portfolios) {
+			foreach ($portfolios as $portfolio) {
+				include_once ("Modules/Portfolio/classes/class.ilPortfolioPage.php");
+				$pages = ilPortfolioPage::getAllPortfolioPages($portfolio["id"]);
+				foreach($pages as $page){
+					$items[$page["id"]] = "Portfolio: ".$portfolio["title"] ." / Seite: ".$page["title"];
+				}
+			}
+		}
+
+		return $this->renderResourceSelection(
+			"exc_select_portfolio",
+			"exc_select_portfolio_info",
+			"setSelectedPortfolioPage",
+			null,
+			$items
+		);
+	}
     
     protected function initPortfolioTemplateForm(array $a_templates)
     {
@@ -533,6 +641,30 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
         return $this->selectPortfolioObject();
     }
 
+	protected function setSelectedPortfolioPageObject()
+	{
+		if (!$this->submission->canSubmit()) {
+			ilUtil::sendInfo($this->lng->txt("exercise_time_over"), true);
+			$this->returnToParentObject();
+		}
+
+		if ($_POST["item"]) {
+			$this->submission->deleteAllFiles();
+			$this->handleRemovedUpload();
+
+			$portfolio = ilPortfolioPage::findPortfolioForPage((int) $_POST["item"]);
+
+			$this->submission->addResourceObject($_POST["item"]);
+
+			ilUtil::sendSuccess($this->lng->txt("exc_portfolio_selected"), true);
+			$this->ctrl->setParameter($this, "prtf_id", $_POST["item"]);
+			$this->ctrl->redirect($this, "askDirectSubmission");
+		}
+
+		ilUtil::sendFailure($this->lng->txt("select_one"));
+		return $this->selectPortfolioObject();
+	}
+
     protected function askUnlinkPortfolioObject()
     {
         $tpl = $this->tpl;
@@ -615,7 +747,11 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
         }
         // submit current version of portfolio
         elseif ($_REQUEST["prtf_id"]) {
-            $success = $this->submitPortfolio($_REQUEST["prtf_id"]);
+			if(ilObject::_lookupType($_REQUEST["prtf_id"]) == "prtf"){
+				$success = $this->submitPortfolio($_REQUEST["prtf_id"]);
+			}else{
+				$success = $this->submitPortfolioPage($_REQUEST["prtf_id"]);
+			}
             $this->ctrl->setParameter($this, "prtf_id", "");
         }
                 
@@ -699,6 +835,43 @@ class ilExSubmissionObjectGUI extends ilExSubmissionBaseGUI
         }
         return false;
     }
+
+	/**
+	 * Submit portfolio for assignment
+	 *
+	 * @param int $a_portfolio_id
+	 * @return bool
+	 */
+	public function submitPortfolioPage($a_portfolio_id)
+	{
+		if (!$this->submission->canSubmit()) {
+			return;
+		}
+		$prtf_id = ilPortfolioPage::findPortfolioForPage((int) $a_portfolio_id);
+
+		$prtf = new ilObjPortfolio($prtf_id, false);
+		if ($prtf->getTitle()) {
+			$port_gui = new ilObjPortfolioGUI($prtf_id);
+			$port_export = new \ILIAS\Portfolio\Export\PortfolioHtmlExport($port_gui, $a_portfolio_id);
+			$file = $port_export->exportHtml();
+
+			$size = filesize($file);
+			if ($size) {
+				$this->submission->deleteAllFiles();
+
+				$meta = array(
+					"name" => $prtf_id,
+					"tmp_name" => $file,
+					"size" => $size
+				);
+				$this->submission->uploadFile($meta, true);
+
+				$this->handleNewUpload();
+				return true;
+			}
+		}
+		return false;
+	}
     
     public static function initGUIForSubmit($a_ass_id, $a_user_id = null)
     {

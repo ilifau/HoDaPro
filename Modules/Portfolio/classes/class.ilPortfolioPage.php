@@ -152,7 +152,7 @@ class ilPortfolioPage extends ilPageObject
     /**
      * Create new portfolio page
      */
-    public function create($a_import = false)
+    public function create($a_import = false, $prt_id = null, $page_id = null)
     {
         $ilDB = $this->db;
 
@@ -169,7 +169,7 @@ class ilPortfolioPage extends ilPageObject
         $ilDB->insert("usr_portfolio_page", $fields);
 
         if (!$a_import) {
-            parent::create();
+				parent::create();
             // $this->saveInternalLinks($this->getDomDoc());
         }
     }
@@ -310,6 +310,34 @@ class ilPortfolioPage extends ilPageObject
         }
         return $pages;
     }
+
+	/**
+	 * Get pages of portfolio
+	 *
+	 * @param int $a_portfolio_id
+	 * @return array
+	 */
+	public static function getPortfolioPage($a_page_id)
+	{
+		global $DIC;
+
+		$ilDB = $DIC->database();
+		$lng = $DIC->language();
+
+		$set = $ilDB->query("SELECT * FROM usr_portfolio_page" .
+			" WHERE id = " . $ilDB->quote($a_page_id, "integer") .
+			" ORDER BY order_nr");
+		$pages = array();
+		while ($rec = $ilDB->fetchAssoc($set)) {
+			// because of migration of extended user profiles
+			if ($rec["title"] == "###-") {
+				$rec["title"] = $lng->txt("profile");
+			}
+
+			$pages[] = $rec;
+		}
+		return $pages;
+	}
 
     /**
      * Fix ordering

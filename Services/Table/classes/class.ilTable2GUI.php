@@ -1664,6 +1664,30 @@ class ilTable2GUI extends ilTableGUI
         $this->setFooter("tblfooter", $this->lng->txt("previous"), $this->lng->txt("next"));
 
         $data = $this->getData();
+
+        //Fau:Einzelne Portfolio-Seiten Freigeben
+		$new_data = array();
+        foreach ($data as $entry){
+        	if(is_array($entry)){
+				if(isset($entry["obj_id"])){
+					if(is_string($entry["obj_id"]) or is_int($entry["obj_id"])){
+						$extended_data = ilPortfolioAccessHandler::getExtendedData($entry["obj_id"]);
+					}
+				}
+			}
+			if($extended_data) {
+				$pages = explode("_", $extended_data);
+				foreach ($pages as $page){
+					$entry["wsp_id"] = $page;
+					$new_data[] = $entry;
+				}
+			}else{
+				$new_data[] = $entry;
+			}
+		}
+
+        $data = $new_data;
+		//Fau.
         if ($this->dataExists()) {
             // sort
             if (!$this->getExternalSorting() && $this->enabled["sort"]) {

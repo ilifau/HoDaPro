@@ -73,6 +73,11 @@ class ilExAssignmentTypesGUI
             case ilExAssignment::TYPE_WIKI_TEAM:
                 return new ilExAssTypeWikiTeamGUI();
                 break;
+
+			case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+				include_once ("Modules/Exercise/AssignmentTypes/GUI/classes/class.ilExAssTypePortfolioPageGUI.php");
+				return new ilExAssTypePortfolioPageGUI();
+				break;
         }
 
         // we should throw some exception here

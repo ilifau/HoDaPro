@@ -415,6 +415,9 @@ class ilExerciseManagementCollectFilesJob extends AbstractJob
             case ilExAssignment::TYPE_PORTFOLIO:
                 $filepath .= "prt_" . $a_submission_file['filetitle'] . DIRECTORY_SEPARATOR . "index.html";
                 break;
+			case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+				$filepath .= "prt_" . $a_submission_file['filetitle'] . DIRECTORY_SEPARATOR . "index.html";
+				break;
 
             default:
                 $filepath = "";

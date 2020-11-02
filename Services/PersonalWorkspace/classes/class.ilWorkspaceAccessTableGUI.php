@@ -29,7 +29,7 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
      * @param int $a_node_id current workspace object
      * @param object $a_handler workspace access handler
      */
-    public function __construct($a_parent_obj, $a_parent_cmd, $a_node_id, $a_handler)
+    public function __construct($a_parent_obj, $a_parent_cmd, $a_node_id, $a_handler, $a_page_id = null)
     {
         global $DIC;
 
@@ -40,16 +40,20 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
 
         $this->node_id = $a_node_id;
         $this->handler = $a_handler;
+        if($a_page_id){
+        	$this->page_id = $a_page_id;
+		}
 
         parent::__construct($a_parent_obj, $a_parent_cmd);
 
         $this->setId("il_tbl_wsacl");
 
-        $this->setTitle($lng->txt("wsp_shared_table_title"));
+        $this->setTitle("Seite: ".ilPortfolioPage::lookupTitle($a_page_id). " freigabe");
                 
         $this->addColumn($this->lng->txt("wsp_shared_with"), "title");
         $this->addColumn($this->lng->txt("details"), "type");
         $this->addColumn($this->lng->txt("actions"));
+		$this->addColumn("Feedback");
         
         $this->setDefaultOrderField("title");
         $this->setDefaultOrderDirection("asc");
@@ -63,7 +67,7 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
     /**
      * Import data from DB
      */
-    protected function importData()
+    public function importData()
     {
         include_once("./Services/User/classes/class.ilUserUtil.php");
         
@@ -72,46 +76,33 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
             // title is needed for proper sorting
             // special modes should always be on top!
             $title = null;
+
+            //Fau: Show specific pages
+            if(ilPortfolioAccessHandler::getExtendedData($this->node_id, $obj_id) != null){
+            	$pages = explode("_",ilPortfolioAccessHandler::getExtendedData($this->node_id, $obj_id));
+				$entry_data = $this->importData2($obj_id);
+            	foreach ($pages as $page){
+					if ($entry_data[0]) {
+						$data[] = array("id" => $obj_id,
+								"title" => $entry_data[0],
+								"caption" => $entry_data[1],
+								"type" => "Seite " . ilPortfolioPage::lookupTitle($page),
+								"request" => $page);
+					}
+				}
+			}else{
+            	$entry_data = $this->importData2($obj_id);
+				if ($entry_data[0]) {
+					$data[] = array("id" => $obj_id,
+						"title" => $entry_data[0],
+						"caption" => $entry_data[1],
+						"type" => $entry_data[2],
+						"request" => "requestFeedback");
+				}
+			}
             
-            switch ($obj_id) {
-                case ilWorkspaceAccessGUI::PERMISSION_REGISTERED:
-                    $caption = $this->lng->txt("wsp_set_permission_registered");
-                    $title = "0" . $caption;
-                    break;
-                
-                case ilWorkspaceAccessGUI::PERMISSION_ALL_PASSWORD:
-                    $caption = $this->lng->txt("wsp_set_permission_all_password");
-                    $title = "0" . $caption;
-                    break;
-                
-                case ilWorkspaceAccessGUI::PERMISSION_ALL:
-                    $caption = $this->lng->txt("wsp_set_permission_all");
-                    $title = "0" . $caption;
-                    break;
-                                                
-                default:
-                    $type = ilObject::_lookupType($obj_id);
-                    $type_txt = $this->lng->txt("obj_" . $type);
-                    
-                    if ($type === null) {
-                        // invalid object/user
-                    } elseif ($type != "usr") {
-                        $title = $caption = ilObject::_lookupTitle($obj_id);
-                    } else {
-                        $caption = ilUserUtil::getNamePresentation($obj_id, false, true);
-                        $title = strip_tags($caption);
-                    }
-                    break;
-            }
-            
-            if ($title) {
-                $data[] = array("id" => $obj_id,
-                    "title" => $title,
-                    "caption" => $caption,
-                    "type" => $type_txt);
-            }
+
         }
-    
         $this->setData($data);
     }
     
@@ -123,7 +114,7 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
     protected function fillRow($a_set)
     {
         $ilCtrl = $this->ctrl;
-        
+
         // properties
         $this->tpl->setVariable("TITLE", $a_set["caption"]);
         $this->tpl->setVariable("TYPE", $a_set["type"]);
@@ -133,6 +124,50 @@ class ilWorkspaceAccessTableGUI extends ilTable2GUI
             "HREF_CMD",
             $ilCtrl->getLinkTarget($this->parent_obj, "removePermission")
         );
+        $link = $ilCtrl->getLinkTarget($this->parent_obj, "requestFeedback");
+        //if($a_set["request"] != $_REQUEST["user_page"]){
+		//	$link = str_replace("user_page=".$_REQUEST["user_page"],"user_page=".$a_set["request"],$raw_link);
+		//}
+        //if($a_set["caption"] != "Alle registrierten Benutzer"){
+			$this->tpl->setVariable(
+				"HREF_CMD2",
+				$link
+			);
+		//}
         $this->tpl->setVariable("TXT_CMD", $this->lng->txt("remove"));
     }
+
+    public function importData2($obj_id){
+		switch ($obj_id) {
+			case ilWorkspaceAccessGUI::PERMISSION_REGISTERED:
+				$caption = $this->lng->txt("wsp_set_permission_registered");
+				$title = "0" . $caption;
+				break;
+
+			case ilWorkspaceAccessGUI::PERMISSION_ALL_PASSWORD:
+				$caption = $this->lng->txt("wsp_set_permission_all_password");
+				$title = "0" . $caption;
+				break;
+
+			case ilWorkspaceAccessGUI::PERMISSION_ALL:
+				$caption = $this->lng->txt("wsp_set_permission_all");
+				$title = "0" . $caption;
+				break;
+
+			default:
+				$type = ilObject::_lookupType($obj_id);
+				$type_txt = $this->lng->txt("obj_" . $type);
+
+				if ($type === null) {
+					// invalid object/user
+				} elseif ($type != "usr") {
+					$title = $caption = ilObject::_lookupTitle($obj_id);
+				} else {
+					$caption = ilUserUtil::getNamePresentation($obj_id, false, true);
+					$title = strip_tags($caption);
+				}
+				break;
+		}
+		return array($title, $caption, $type_txt);
+	}
 }

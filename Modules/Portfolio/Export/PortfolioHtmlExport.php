@@ -77,7 +77,7 @@ class PortfolioHtmlExport
      * constructor
      * @param \ilObjPortfolioBaseGUI $portfolio_gui
      */
-    public function __construct(\ilObjPortfolioBaseGUI $portfolio_gui)
+    public function __construct(\ilObjPortfolioBaseGUI $portfolio_gui, $page_id = null)
     {
         global $DIC;
 
@@ -98,6 +98,10 @@ class PortfolioHtmlExport
             \ilHTMLExportViewLayoutProvider::HTML_EXPORT_RENDERING,
             true
         );
+
+        if($page_id){
+        	$this->page_id = $page_id;
+		}
     }
 
     /**
@@ -208,7 +212,11 @@ class PortfolioHtmlExport
      */
     public function exportHTMLPages()
     {
-        $pages = \ilPortfolioPage::getAllPortfolioPages($this->portfolio->getId());
+    	if($this->page_id){
+			$pages = \ilPortfolioPage::getPortfolioPage($this->page_id);
+		}else{
+			$pages = \ilPortfolioPage::getAllPortfolioPages($this->portfolio->getId());
+		}
 
         $this->tabs = [];
         foreach ($pages as $page) {

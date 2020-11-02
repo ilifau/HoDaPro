@@ -8871,6 +8871,7 @@ header {
   justify-self: start;
   display: flex;
   align-items: center;
+  align-content: center;
 }
 .il-pagetitle {
   font-weight: 600;

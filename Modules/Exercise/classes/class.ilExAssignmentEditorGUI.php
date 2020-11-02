@@ -234,7 +234,6 @@ class ilExAssignmentEditorGUI
         $ass_type = $this->types->getById($a_type);
         $ass_type_gui = $this->type_guis->getById($a_type);
         $ilCtrl->setParameter($this, "ass_type", $a_type);
-        
         $lng->loadLanguageModule("form");
         $form = new ilPropertyFormGUI();
         if ($a_mode == "edit") {

@@ -12,6 +12,7 @@
 class ilExAssignmentTypes
 {
     const STR_IDENTIFIER_PORTFOLIO = "prtf";
+	const STR_IDENTIFIER_PORTFOLIO_PAGE = "prtfp";
 
     /**
      * @var ilExerciseInternalService
@@ -55,7 +56,8 @@ class ilExAssignmentTypes
             ilExAssignment::TYPE_TEXT,
             ilExAssignment::TYPE_BLOG,
             ilExAssignment::TYPE_PORTFOLIO,
-            ilExAssignment::TYPE_WIKI_TEAM
+            ilExAssignment::TYPE_WIKI_TEAM,
+			ilExAssignment::TYPE_PORTFOLIO_PAGE
         ];
     }
 
@@ -160,6 +162,10 @@ class ilExAssignmentTypes
             case ilExAssignment::TYPE_WIKI_TEAM:
                 return new ilExAssTypeWikiTeam();
                 break;
+			case ilExAssignment::TYPE_PORTFOLIO_PAGE:
+				include_once ("Modules/Exercise/AssignmentTypes/classes/class.ilExAssTypePortfolioPage.php");
+				return new ilExAssTypePortfolioPage();
+				break;
         }
 
         // we should throw some exception here

@@ -8,8 +8,8 @@
 *
 * @ilCtrl_Calls ilExSubmissionGUI: ilExSubmissionTeamGUI, ilExSubmissionFileGUI
 * @ilCtrl_Calls ilExSubmissionGUI: ilExSubmissionTextGUI, ilExSubmissionObjectGUI
-* @ilCtrl_Calls ilExSubmissionGUI: ilExPeerReviewGUI
-* @ingroup ModulesExercise
+* @ilCtrl_Calls ilExSubmissionGUI: ilExPeerReviewGUI, ilPortfolioPageGUI
+ * @ingroup ModulesExercise
 */
 class ilExSubmissionGUI
 {

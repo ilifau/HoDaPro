@@ -203,12 +203,36 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
         if ($a_object_id == $ilUser->getId()) {
             return;
         }
+        //Fau: Check if already exists a page  of the portfolio shared, and updating instead of insert.
+		$set = $ilDB->query("SELECT extended_data FROM usr_portf_acl" .
+			" WHERE node_id = " . $ilDB->quote($a_node_id, "integer")
+			. " AND object_id = " .  $ilDB->quote($a_object_id, "integer"));
+		$res = array();
+		while ($row = $ilDB->fetchAssoc($set)) {
+			$res[] = $row["extended_data"];
+		}
 
-        $ilDB->manipulate("INSERT INTO usr_portf_acl (node_id, object_id, extended_data, tstamp)" .
-            " VALUES (" . $ilDB->quote($a_node_id, "integer") . ", " .
-            $ilDB->quote($a_object_id, "integer") . "," .
-            $ilDB->quote($a_extended_data, "text") . "," .
-            $ilDB->quote(time(), "integer") . ")");
+		if(!empty($res)){
+			if($a_extended_data != $res[0]){
+				$new_extended_data = $res[0] . "_" . $a_extended_data;
+				$ilDB->update("usr_portf_acl",array(
+					"node_id" => array("integer", $a_node_id),
+					"object_id" => array("integer", $a_object_id),
+					"extended_data" => array("text", $new_extended_data),
+					"tstamp" => array("integer", time())),
+					array(
+					"node_id" => array("integer", $a_node_id),
+					"object_id" => array("integer", $a_object_id)
+				));
+			}
+		}else{
+			$ilDB->manipulate("INSERT INTO usr_portf_acl (node_id, object_id, extended_data, tstamp)" .
+				" VALUES (" . $ilDB->quote($a_node_id, "integer") . ", " .
+				$ilDB->quote($a_object_id, "integer") . "," .
+				$ilDB->quote($a_extended_data, "text") . "," .
+				$ilDB->quote(time(), "integer") . ")");
+		}
+		//Fau.
         
         // portfolio as profile
         $this->syncProfile($a_node_id);
@@ -594,4 +618,28 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 
         return false;
     }
+
+    /*
+     * //Fau: Einzelne Portfolio-Seiten Freigeben
+     */
+	public static function getExtendedData($a_node_id, $a_obj_id = null)
+	{
+		global $DIC;
+
+		$ilDB = $DIC->database();
+
+		if($a_obj_id){
+			$set = $ilDB->query("SELECT extended_data FROM usr_portf_acl" .
+				" WHERE node_id = " . $ilDB->quote($a_node_id, "integer") .
+				" AND object_id = " . $ilDB->quote($a_obj_id, "integer"));
+		}else{
+			$set = $ilDB->query("SELECT extended_data FROM usr_portf_acl" .
+				" WHERE node_id = " . $ilDB->quote($a_node_id, "integer"));
+		}
+
+		$res = $ilDB->fetchAssoc($set);
+		if ($res) {
+			return $res["extended_data"];
+		}
+	}
 }

@@ -429,8 +429,10 @@ abstract class ilObjPortfolioBase extends ilObject2
      * @param ilObjPortfolioBase $a_source
      * @param ilObjPortfolioBase $a_target
      * @param array $a_recipe
+	 * @param bool $copy_all
+	 * @param int $page_id to copy one page only. Vorlagen für Portfolio-Seiten
      */
-    public static function clonePagesAndSettings(ilObjPortfolioBase $a_source, ilObjPortfolioBase $a_target, array $a_recipe = null, $copy_all = false)
+    public static function clonePagesAndSettings(ilObjPortfolioBase $a_source, ilObjPortfolioBase $a_target, array $a_recipe = null, $copy_all = false, $copy_page_id = null)
     {
         global $DIC;
 
@@ -460,7 +462,14 @@ abstract class ilObjPortfolioBase extends ilObject2
         $page_map = array();
         foreach (ilPortfolioPage::getAllPortfolioPages($source_id) as $page) {
             $page_id = $page["id"];
-            
+            //fau: Vorlagen für Portfolio-Seiten  Copy only one page
+			if($copy_page_id){
+				if((int) $page_id != $copy_page_id){
+					continue;
+				}
+			}
+			//fau.
+
             if ($direction == "t2p") {
                 $source_page = new ilPortfolioTemplatePage($page_id);
                 $target_page = new ilPortfolioPage();
@@ -472,7 +481,11 @@ abstract class ilObjPortfolioBase extends ilObject2
             $target_page->setPortfolioId($target_id);
             
             $page_type = $source_page->getType();
-            $page_title = $source_page->getTitle();
+            if($copy_page_id){
+				$page_title = ilPortfolioPage::lookupTitle($copy_page_id);
+			}else{
+				$page_title = $source_page->getTitle();
+			}
 
             
                 

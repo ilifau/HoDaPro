@@ -1045,10 +1045,13 @@ class ilPersonalProfileGUI
             $radg->addOption($op1);
             $op2 = new ilRadioOption($lng->txt("usr_public_profile_logged_in"), "y");
             $radg->addOption($op2);
+            //Fau hide all
+			/*
             if ($ilSetting->get('enable_global_profiles')) {
                 $op3 = new ilRadioOption($lng->txt("usr_public_profile_global"), "g");
                 $radg->addOption($op3);
-            }
+            }*/
+            //fau
             $this->form->addItem($radg);
             
             // #11773

@@ -34,7 +34,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
      * @var ilPortfolioDeclarationOfAuthorship
      */
     protected $declaration_authorship;
-    
+
     public function __construct($a_id = 0)
     {
         global $DIC;
@@ -54,12 +54,12 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
 
         $this->ctrl->saveParameter($this, "exc_back_ref_id");
     }
-    
+
     public function getType()
     {
         return "prtf";
     }
-    
+
     protected function checkPermissionBool($a_perm, $a_cmd = "", $a_type = "", $a_node_id = null)
     {
         if ($a_perm == "create") {
@@ -70,23 +70,23 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         }
         return $this->access_handler->checkAccess($a_perm, "", $a_node_id);
     }
-    
+
     public function executeCommand()
     {
         $lng = $this->lng;
-        
+
         $this->checkPermission("read");
 
         // goto link to portfolio page
         if ($_GET["gtp"]) {
             $_GET["user_page"] = $_GET["gtp"];
         }
-        
+
         $this->setTitleAndDescription();
-        
+
         $next_class = $this->ctrl->getNextClass($this);
         $cmd = $this->ctrl->getCmd("view");
-        
+
 
         // trigger assignment tool
         $this->triggerAssignmentTool();
@@ -96,12 +96,12 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                 if ($this->checkPermissionBool("write")) {
                     $this->setTabs();
                     $this->tabs_gui->activateTab("share");
-                    
+
                     if ($this->access_handler->getPermissions($this->object->getId()) &&
                         !$this->object->isOnline()) {
                         //ilUtil::sendInfo($lng->txt("prtf_shared_offline_info"));
                     }
-                                        
+
                     $this->tpl->setPermanentLink("prtf", $this->object->getId());
 
                     $wspacc = new ilWorkspaceAccessGUI($this->object->getId(), $this->access_handler, true);
@@ -109,21 +109,21 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                     $this->ctrl->forwardCommand($wspacc);
                 }
                 break;
-            
+
             case 'ilportfoliopagegui':
                 if ($this->determinePageCall()) {
                     // only in edit mode
                     $this->addLocator();
-                                        
+
                     ilFileInputGUI::setPersonalWorkspaceQuotaCheck(true);
                 }
                 $this->handlePageCall($cmd);
                 break;
-                
+
             case "ilnotegui":
                 $this->preview();
                 break;
-            
+
             case "ilobjstylesheetgui":
                 $this->ctrl->setReturn($this, "editStyleProperties");
                 $style_gui = new ilObjStyleSheetGUI("", $this->object->getStyleSheetId(), false, false);
@@ -146,13 +146,13 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                     $this->ctrl->redirectByClass("ilobjstylesheetgui", "edit");
                 }
                 break;
-                
+
             case "ilportfolioexercisegui":
                 $this->ctrl->setReturn($this, "view");
                 $gui = new ilPortfolioExerciseGUI($this->user_id, $this->object->getId());
                 $this->ctrl->forwardCommand($gui);
                 break;
-            
+
             default:
 
                 if ($cmd != "preview") {
@@ -192,52 +192,53 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
     protected function setTabs()
     {
         $ilHelp = $this->help;
-        
+
         $ilHelp->setScreenIdComponent("prtf");
-            
+
         if ($this->checkPermissionBool("write")) {
             $this->tabs_gui->addTab(
                 "pages",
                 $this->lng->txt("content"),
                 $this->ctrl->getLinkTarget($this, "view")
             );
-                            
+
             $this->tabs_gui->addTab(
                 "settings",
                 $this->lng->txt("settings"),
                 $this->ctrl->getLinkTarget($this, "edit")
             );
-        
+
             $this->tabs_gui->addNonTabbedLink(
                 "preview",
                 $this->lng->txt("user_profile_preview"),
                 $this->ctrl->getLinkTarget($this, "preview")
             );
-                        
+
             $this->lng->loadLanguageModule("wsp");
+            /*
             $this->tabs_gui->addTab(
                 "share",
                 $this->lng->txt("wsp_permissions"),
                 $this->ctrl->getLinkTargetByClass("ilworkspaceaccessgui", "share")
-            );
+            );*/
         }
     }
-    
+
     protected function addLocator()
     {
         if (!$this->creation_mode) {
             $this->ctrl->setParameter($this, "prt_id", $this->object->getId());
         }
-        
+
         parent::addLocatorItems();
-        
+
         $this->tpl->setLocator();
     }
-    
+
     protected function setTitleAndDescription()
     {
         // parent::setTitleAndDescription();
-        
+
         $title = $this->lng->txt("portfolio");
         if ($this->object) {
             $title .= ": " . $this->object->getTitle();
@@ -247,7 +248,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             ilUtil::getImagePath("icon_prtf.svg"),
             $this->lng->txt("portfolio")
         );
-        
+
         if ($this->object &&
             !$this->object->isOnline()) {
             $this->tpl->setAlertProperties(array(
@@ -257,8 +258,8 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             ));
         }
     }
-            
-    
+
+
     //
     // CREATE/EDIT
     //
@@ -292,7 +293,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             if ($_GET["cpfl"] && isset($forms[self::CFORM_CLONE])) {
                 $forms = array(self::CFORM_CLONE => $forms[self::CFORM_CLONE]);
             }
-            $tpl->setContent($this->getCreateInfoMessage() . $this->getCreationFormsHTML($forms));
+            $tpl->setContent($this->getCreationFormsHTML($forms));
         }
     }
 
@@ -352,16 +353,16 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
     {
         return array(self::CFORM_NEW => $this->initCreateForm($a_new_type));
     }
-    
+
     protected function initCreateForm($a_new_type)
     {
         $ilSetting = $this->settings;
-        
+
         $this->ctrl->setParameter($this, "new_type", $this->getType());
-        
+
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ctrl->getFormAction($this));
-                
+
         // title
         $ti = new ilTextInputGUI($this->lng->txt("title"), "title");
         $ti->setSize(min(40, ilObject::TITLE_LENGTH));
@@ -372,29 +373,30 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $main = new ilRadioGroupInputGUI($this->lng->txt("prtf_creation_mode"), "mode");
         $main->setValue("mode_scratch");
         $form->addItem($main);
-        
-        $opt_scratch = new ilRadioOption($this->lng->txt("prtf_creation_mode_scratch"), "mode_scratch");
-        $main->addOption($opt_scratch);
-        
-        
+
+        //$opt_scratch = new ilRadioOption($this->lng->txt("prtf_creation_mode_scratch"), "mode_scratch");
+        //$main->addOption($opt_scratch);
+
+
         // 1st page
-        
+/*
         $type = new ilRadioGroupInputGUI($this->lng->txt("prtf_first_page_title"), "ptype");
         $type->setRequired(true);
         $opt_scratch->addSubItem($type);
 
         $type_page = new ilRadioOption($this->lng->txt("page"), "page");
         $type->addOption($type_page);
-        
+
         // page type: page
         $tf = new ilTextInputGUI($this->lng->txt("title"), "fpage");
         $tf->setMaxLength(128);
         $tf->setSize(40);
         $tf->setRequired(true);
-        $type_page->addSubItem($tf);
+        $type_page->addSubItem($tf);*/
 
         // page templates
         $templates = ilPageLayout::activeLayouts(false, ilPageLayout::MODULE_PORTFOLIO);
+        /*
         if ($templates) {
             $options = array(0 => $this->lng->txt("none"));
             foreach ($templates as $templ) {
@@ -407,8 +409,9 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             $use_template->setOptions($options);
             $type_page->addSubItem($use_template);
         }
-
+*/
         // page type: blog
+		/*
         if (!$ilSetting->get('disable_wsp_blogs')) {
             $options = array();
             $tree = new ilWorkspaceTree($this->user_id);
@@ -433,14 +436,14 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             } else {
                 $type->setValue("page");
             }
-        }
-                
-        
+        }*/
+
+
         // portfolio templates
-        
+
         $opt_tmpl = new ilRadioOption($this->lng->txt("prtf_creation_mode_template"), "mode_tmpl");
         $main->addOption($opt_tmpl);
-                
+
         $templates = ilObjPortfolioTemplate::getAvailablePortfolioTemplates();
         if (!sizeof($templates)) {
             $opt_tmpl->setDisabled(true);
@@ -449,22 +452,22 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             $tmpl->setRequired(true);
             $tmpl->setOptions(array("" => $this->lng->txt("please_select")) + $templates);
             $opt_tmpl->addSubItem($tmpl);
-            
+
             // incoming from repository
             if ((int) $_REQUEST["prtt_pre"]) {
                 $tmpl->setValue((int) $_REQUEST["prtt_pre"]);
                 $main->setValue("mode_tmpl");
             }
         }
-        
-        
+
+
         $form->setTitle($this->lng->txt("prtf_create_portfolio"));
         $form->addCommandButton("save", $this->lng->txt("create"));
         $form->addCommandButton("toRepository", $this->lng->txt("cancel"));
-        
+
         return $form;
     }
-    
+
     public function save()
     {
         $form = $this->initCreateForm("prtf");
@@ -472,15 +475,23 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             // trigger portfolio template "import" process
             if ($form->getInput("mode") == "mode_tmpl") {
                 $_REQUEST["pt"] = $form->getInput("title");
-                $_REQUEST["prtt_pre"] = (int) $_REQUEST["prtt"];
-                return $this->createFromTemplateDirect($form->getInput("title"));
-                //return $this->createPortfolioFromTemplate();
+                //fau: Vorlagen für Portfolio-Seiten handle page selection for portfolio creation
+                if(strpos($_REQUEST["prtt"], "_")){
+                	$page_info = explode("_",$_REQUEST["prtt"]);
+					$_REQUEST["prtt_pre"] = (int) $page_info[0];
+					$_REQUEST["prtt_pre_page"] = (int) $page_info[1];
+				}else{
+					$_REQUEST["prtt_pre"] = (int) $_REQUEST["prtt"];
+				}
+                //fau.
+                return $this->createFromTemplateDirect((int) $page_info[1]);
+                //return $this->createPortfolioFromTemplate($form);
             }
         }
-        
+
         return parent::save();
     }
-    
+
     protected function afterSave(ilObject $a_new_object)
     {
         // create 1st page / blog
@@ -505,26 +516,26 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $this->ctrl->setParameter($this, "prt_id", $a_new_object->getId());
         $this->ctrl->redirect($this, "view");
     }
-    
+
     protected function toRepository()
     {
         $ilAccess = $this->access;
-        
+
         // return to exercise (portfolio assignment)
         $exc_ref_id = (int) $_REQUEST["exc_id"];
         if ($exc_ref_id &&
             $ilAccess->checkAccess("read", "", $exc_ref_id)) {
             ilUtil::redirect(ilLink::_getLink($exc_ref_id, "exc"));
         }
-        
+
         $this->ctrl->redirectByClass("ilportfoliorepositorygui", "show");
     }
-    
+
     protected function initEditForm()
     {
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ctrl->getFormAction($this));
-        
+
         // title
         $ti = new ilTextInputGUI($this->lng->txt("title"), "title");
         $ti->setSize(min(40, ilObject::TITLE_LENGTH));
@@ -540,12 +551,12 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $ta->setValue($this->object->getDescription());
         $form->addItem($ta);
         */
-        
+
         // :TODO: online
         $online = new ilCheckboxInputGUI($this->lng->txt("online"), "online");
         $online->setChecked($this->object->isOnline());
         $form->addItem($online);
-        
+
         $this->initEditCustomForm($form);
 
         $form->setTitle($this->lng->txt("prtf_edit_portfolio"));
@@ -554,14 +565,14 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
 
         return $form;
     }
-    
+
     protected function getEditFormCustomValues(array &$a_values)
     {
         $a_values["online"] = $this->object->isOnline();
-        
+
         parent::getEditFormCustomValues($a_values);
     }
-    
+
     public function updateCustom(ilPropertyFormGUI $a_form)
     {
         $this->object->setOnline($a_form->getInput("online"));
@@ -570,15 +581,15 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         if (!$a_form->getInput("online")) {
             ilObjPortfolio::setUserDefault($this->user_id, 0);
         }
-        
+
         parent::updateCustom($a_form);
     }
-        
-    
+
+
     //
     // PAGES
     //
-    
+
     /**
      * Get portfolio template page instance
      *
@@ -596,7 +607,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $page->setPortfolioId($a_portfolio_id);
         return $page;
     }
-    
+
     /**
      * Get portfolio template page gui instance
      *
@@ -614,12 +625,12 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $page_gui->setAdditional($this->getAdditional());
         return $page_gui;
     }
-    
+
     public function getPageGUIClassName()
     {
         return "ilportfoliopagegui";
     }
-    
+
     protected function initCopyPageFormOptions(ilPropertyFormGUI $a_form)
     {
         $a_tgt = new ilRadioGroupInputGUI($this->lng->txt("target"), "target");
@@ -648,12 +659,12 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $tf->setRequired(true);
         $new->addSubItem($tf);
     }
-    
-    
+
+
     //
     // BLOG
     //
-    
+
     /**
      * Init blog page form
      *
@@ -705,10 +716,10 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             $this->object->getTitle());
         $form->addCommandButton("saveBlog", $this->lng->txt("save"));
         $form->addCommandButton("view", $this->lng->txt("cancel"));
-        
+
         return $form;
     }
-    
+
     /**
      * Create new portfolio blog page
      */
@@ -761,8 +772,8 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $form->setValuesByPost();
         $this->tpl->setContent($form->getHtml());
     }
-    
-        
+
+
     //
     // CREATE FROM TEMPLATE
     //
@@ -825,15 +836,15 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                 asort($blog_options);
             }
         }
-            
+
         $has_form_content = false;
-                
+
         $check_quota = ilDiskQuotaActivationChecker::_isPersonalWorkspaceActive();
         $quota_sum = 0;
-                            
+
         $pskills = array_keys(ilPersonalSkill::getSelectedUserSkills($ilUser->getId()));
         $skill_ids = array();
-        
+
         foreach (ilPortfolioTemplatePage::getAllPortfolioPages($a_prtt_id) as $page) {
             switch ($page["type"]) {
                 case ilPortfolioTemplatePage::TYPE_PAGE:
@@ -849,13 +860,13 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                         $has_form_content = true;
                     }
                     break;
-                
+
                 case ilPortfolioTemplatePage::TYPE_BLOG_TEMPLATE:
                     if (!$ilSetting->get('disable_wsp_blogs')) {
                         $has_form_content = true;
-                        
+
                         $field_id = "blog_" . $page["id"];
-                                            
+
                         $blog = new ilRadioGroupInputGUI($this->lng->txt("obj_blog") . ": " .
                             $page["title"], $field_id);
                         $blog->setRequired(true);
@@ -864,11 +875,11 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
 
                         $new_blog = new ilRadioOption($this->lng->txt("prtf_template_import_blog_create"), "blog_create");
                         $blog->addOption($new_blog);
-                        
+
                         $title = new ilTextInputGUI($this->lng->txt("title"), $field_id . "_create_title");
                         $title->setRequired(true);
                         $new_blog->addSubItem($title);
-                        
+
                         if (sizeof($blog_options)) {
                             $reuse_blog = new ilRadioOption($this->lng->txt("prtf_template_import_blog_reuse"), "blog_resuse");
                             $blog->addOption($reuse_blog);
@@ -878,13 +889,13 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                             $obj->setOptions(array("" => $this->lng->txt("please_select")) + $blog_options);
                             $reuse_blog->addSubItem($obj);
                         }
-                                                
+
                         $blog->addOption(new ilRadioOption($this->lng->txt("prtf_template_import_blog_ignore"), "blog_ignore"));
                     }
                     break;
             }
         }
-        
+
         if ($skill_ids) {
             $skills = new ilCheckboxGroupInputGUI($this->lng->txt("skills"), "skill_ids");
             $skills->setInfo($this->lng->txt("prtf_template_import_new_skills"));
@@ -894,47 +905,47 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             }
             $form->addItem($skills);
         }
-        
+
         if ($quota_sum) {
             if (!ilDiskQuotaHandler::isUploadPossible($quota_sum)) {
                 ilUtil::sendFailure($this->lng->txt("prtf_template_import_quota_failure"), true);
                 $this->ctrl->redirect($this, "create");
             }
         }
-        
+
         // no dialog needed, go ahead
         if (!$has_form_content) {
             return;
         }
-        
+
         $form->setTitle($this->lng->txt("prtf_creation_mode") . ": " . $this->lng->txt("prtf_creation_mode_template"));
         $form->addCommandButton("createPortfolioFromTemplateProcess", $this->lng->txt("continue"));
         $form->addCommandButton("toRepository", $this->lng->txt("cancel"));
-        
+
         return $form;
     }
-    
+
     protected function createPortfolioFromTemplateProcess($a_process_form = true)
     {
         $ilSetting = $this->settings;
         $ilUser = $this->user;
         $ilAccess = $this->access;
-        
+
         $title = trim($_REQUEST["pt"]);
         $prtt_id = (int) $_REQUEST["prtt"];
-        
+
         // valid template?
         $templates = array_keys(ilObjPortfolioTemplate::getAvailablePortfolioTemplates());
         if (!sizeof($templates) || !in_array($prtt_id, $templates)) {
             $this->toRepository();
         }
         unset($templates);
-        
+
         // build page recipe (aka import form values)
         $recipe = null;
         if ($a_process_form) {
             $this->ctrl->setParameter($this, "prtt", $prtt_id);
-            
+
             $form = $this->initCreatePortfolioFromTemplateForm($prtt_id, $title);
             if ($form->checkInput()) {
                 foreach (ilPortfolioTemplatePage::getAllPortfolioPages($prtt_id) as $page) {
@@ -961,27 +972,27 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                             break;
                     }
                 }
-                
+
                 $recipe["skills"] = (array) $form->getInput("skill_ids");
             } else {
                 $form->setValuesByPost();
                 return $this->createPortfolioFromTemplate($form);
             }
         }
-        
+
         $source = new ilObjPortfolioTemplate($prtt_id, false);
-        
+
         // create portfolio
         $target = new ilObjPortfolio();
         $target->setTitle($title);
         $target->create();
         $target_id = $target->getId();
-                
+
         $source->clonePagesAndSettings($source, $target, $recipe);
 
         // link portfolio to exercise assignment
         $this->linkPortfolioToAssignment($target_id);
-        
+
         ilUtil::sendSuccess($this->lng->txt("prtf_portfolio_created_from_template"), true);
         $this->ctrl->setParameter($this, "prt_id", $target_id);
         $this->ctrl->redirect($this, "preview");
@@ -990,49 +1001,53 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
     /**
      * Create portfolio template direct
      */
-    protected function createFromTemplateDirect($title = "")
+    protected function createFromTemplateDirect($page_id = "")
     {
-        $prtt_id = (int) $_REQUEST["prtt_pre"];
-        if ($title == "") {
-            $title = ilObject::_lookupTitle($prtt_id);
-        }
+		$ilSetting = $this->settings;
+		$ilUser = $this->user;
+		$ilAccess = $this->access;
 
-        // valid template?
-        $templates = array_keys(ilObjPortfolioTemplate::getAvailablePortfolioTemplates());
-        if (!sizeof($templates) || !in_array($prtt_id, $templates)) {
-            $this->toRepository();
-        }
-        unset($templates);
+		$title = trim($_REQUEST["pt"]);
+		$prtt_id = (int) $_REQUEST["prtt"];
+		$page_id = (int) $_REQUEST["prtt_pre_page"];
 
-        $source = new ilObjPortfolioTemplate($prtt_id, false);
+		// valid template?
+		$templates = array_keys(ilObjPortfolioTemplate::getAvailablePortfolioTemplates());
+		if (!sizeof($templates) || !in_array($prtt_id, $templates)) {
+			$this->toRepository();
+		}
+		unset($templates);
 
-        // create portfolio
-        $target = new ilObjPortfolio();
-        $target->setTitle($title);
-        $target->create();
-        $target_id = $target->getId();
+		// build page recipe (aka import form values)
+		$recipe = null;
+		$source = new ilObjPortfolioTemplate($prtt_id, false);
 
-        $source->clonePagesAndSettings($source, $target, null, true);
+		// create portfolio
+		$target = new ilObjPortfolio();
+		$target->setTitle($title);
+		$target->create();
+		$target_id = $target->getId();
+		$source->clonePagesAndSettings($source, $target, $recipe, false, $page_id);
 
-        // link portfolio to exercise assignment
-        //$this->linkPortfolioToAssignment($target_id);
+		// link portfolio to exercise assignment
+		$this->linkPortfolioToAssignment($target_id);
 
-        ilUtil::sendSuccess($this->lng->txt("prtf_portfolio_created_from_template"), true);
-        $this->ctrl->setParameter($this, "prt_id", $target_id);
-        $this->ctrl->redirect($this, "preview");
+		ilUtil::sendSuccess($this->lng->txt("prtf_portfolio_created_from_template"), true);
+		$this->ctrl->setParameter($this, "prt_id", $target_id);
+		$this->ctrl->redirect($this, "preview");
     }
 
 
     public static function _goto($a_target)
     {
         $id = explode("_", $a_target);
-        
+
         $_GET["baseClass"] = "ilsharedresourceGUI";
         $_GET["prt_id"] = $id[0];
         if (sizeof($id) == 2) {
             $_GET["gtp"] = $id[1];
         }
-        
+
         include("ilias.php");
         exit;
     }
@@ -1505,11 +1520,24 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         $ilCtrl = $this->ctrl;
         $lng = $this->lng;
 
-        if (ilObjPortfolio::_lookupOwner($this->object->getId()) == $this->user_id) {
-            $this->object->setOnline(true);
-            $this->object->update();
-            ilUtil::sendSuccess($lng->txt("prtf_has_been_set_online"), true);
-        }
-        $ilCtrl->redirectByClass("ilworkspaceaccessgui", "");
+        if($this->object != NULL){
+			if (ilObjPortfolio::_lookupOwner($this->object->getId()) == $this->user_id) {
+				$this->object->setOnline(true);
+				$this->object->update();
+				ilUtil::sendSuccess($lng->txt("prtf_has_been_set_online"), true);
+			}
+			$ilCtrl->redirectByClass("ilworkspaceaccessgui", "");
+		}
     }
+
+    /*
+     * //fau: Einzelne Portfolio-Seiten Freigeben
+     *
+     */
+	public function sharePage($a_page_id){
+		$this->ctrl->setParameterByClass("ilworkspaceaccessgui", "user_page", $a_page_id);
+		$wspacc = new ilWorkspaceAccessGUI($a_page_id, $this->access_handler, true);
+		//$wspacc->setBlockingMessage($this->getOfflineMessage());
+		$wspacc->executeCommand();
+	}
 }
