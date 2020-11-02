@@ -96,7 +96,8 @@ class SurveyTextQuestionGUI extends SurveyQuestionGUI
             $template->setVariable("QUESTION_TITLE", $this->getPrintViewQuestionTitle($question_title));
         }
         $template->setVariable("QUESTION_ID", $this->object->getId());
-        $template->setVariable("TEXT_ANSWER", $this->lng->txt("answer"));
+        //fau: Delete text answer
+        $template->setVariable("TEXT_ANSWER", "");
         if (is_array($a_working_data) && trim($user_answer)) {
             $template->setVariable("TEXT", nl2br($user_answer));
         } else {
@@ -156,7 +157,8 @@ class SurveyTextQuestionGUI extends SurveyQuestionGUI
         if ($question_title) {
             $template->setVariable("QUESTION_TITLE", $this->object->getTitle());
         }
-        $template->setVariable("TEXT_ANSWER", $this->lng->txt("answer"));
+        //fau: delete text answer
+        $template->setVariable("TEXT_ANSWER", "");
         $template->setVariable("LABEL_QUESTION_ID", $this->object->getId());
         if (strcmp($error_message, "") != 0) {
             $template->setVariable("ERROR_MESSAGE", "<p class=\"warning\">$error_message</p>");

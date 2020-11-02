@@ -174,6 +174,11 @@ class ilMailSearchGUI
             $this->lng->loadLanguageModule("wsp");
             $title = $this->lng->txt("wsp_share_search_users");
         }
+
+		//fau: Manage page_id
+		if(isset($_GET["page_id"])){
+			$this->page_id = (int) $_GET["page_id"];
+		}
         
         // searchform
         include_once 'Services/Form/classes/class.ilPropertyFormGUI.php';

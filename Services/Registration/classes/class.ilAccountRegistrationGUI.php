@@ -113,23 +113,23 @@ class ilAccountRegistrationGUI
 
         $this->form = new ilPropertyFormGUI();
         $this->form->setFormAction($this->ctrl->getFormAction($this));
-        
-        
-        // code handling
-        
-        if ($this->code_enabled) {
+
+
+		// code handling
+
+		if ($this->code_enabled) {
             $code = new ilTextInputGUI($this->lng->txt("registration_code"), "usr_registration_code");
-            $code->setSize(40);
-            $code->setMaxLength(ilRegistrationCode::CODE_LENGTH);
-            if ((bool) $this->registration_settings->registrationCodeRequired()) {
-                $code->setRequired(true);
+			$code->setSize(40);
+			$code->setMaxLength(ilRegistrationCode::CODE_LENGTH);
+			if ((bool) $this->registration_settings->registrationCodeRequired()) {
+				$code->setRequired(true);
                 $code->setInfo($this->lng->txt("registration_code_required_info"));
-            } else {
+			} else {
                 $code->setInfo($this->lng->txt("registration_code_optional_info"));
-            }
-            $this->form->addItem($code);
-        }
-        
+			}
+			$this->form->addItem($code);
+		}
+
 
         // user defined fields
         $user_defined_data = $ilUser->getUserDefinedData();
@@ -162,8 +162,7 @@ class ilAccountRegistrationGUI
         // add fields to form
         $up->addStandardFieldsToForm($this->form, null, $custom_fields);
         unset($custom_fields);
-        
-        
+
         // set language selection to current display language
         $flang = $this->form->getItemByPostVar("usr_language");
         if ($flang) {
@@ -681,9 +680,11 @@ class ilAccountRegistrationGUI
             ilSession::set('registered_user', $this->userObj->getId());
 
             $tpl->setCurrentBlock('activation');
-            $tpl->setVariable('TXT_REGISTERED', $this->lng->txt('txt_registered'));
+            $tpl->setVariable('TXT_REGISTERED', "<div class='ilc_section_HoDaPro6 ilCOPageSection'>Vielen Dank. </br>Sie haben sich erfolgreich im ILIAS-System registriert.  </br>Sie können sich nun gleich in den Interessierten-Bereich der WB HoDaPro - Weiterbildungsplattform anmelden/einloggen.</div>");
 
-            $action = $GLOBALS['DIC']->ctrl()->getFormAction($this, 'login') . '&target=' . ilUtil::stripSlashes($_GET['target']);
+            //fau change form action possible bug, redirect to registration instead
+            //$action = $GLOBALS['DIC']->ctrl()->getFormAction($this, 'login') . '&target=' . ilUtil::stripSlashes($_GET['target']);
+			$action = "https://hd-professionalisierung.de/ilias6dev/login.php?client_id=HoDaPro6&cmd=force_login&lang=de";
             $tpl->setVariable('FORMACTION', $action);
 
             $tpl->setVariable('TXT_LOGIN', $this->lng->txt('login_to_ilias'));

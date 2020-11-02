@@ -127,8 +127,6 @@ class ilNote
     
     public function getObject()
     {
-        // note: any changes here will currently influence
-        // the parameters of all observers!
         return array("rep_obj_id" => $this->rep_obj_id,
             "obj_id" => $this->obj_id,
             "obj_type" => $this->obj_type,
@@ -471,10 +469,16 @@ class ilNote
 
         $ilDB = $DIC->database();
         $ilUser = $DIC->user();
-        
-        $author_where = ($a_type == IL_NOTE_PRIVATE || $a_all_public == "n")
-            ? " AND author = " . $ilDB->quote((int) $ilUser->getId(), "integer")
-            : "";
+
+        //fau: Show only own comments or show all in case you are the owner of the object
+        $owner_id = (int) ilObject::_lookupOwner($a_rep_obj_id);
+        if ($owner_id == (int) $ilUser->getId()){
+            $author_where = "";
+        }
+        else {
+            $author_where = " AND author = " . $ilDB->quote((int) $ilUser->getId(), "integer");
+        }
+        //fau.
 
         $sub_where = (!$a_incl_sub)
             ? " AND obj_id = " . $ilDB->quote((int) $a_obj_id, "integer") .

@@ -827,8 +827,9 @@ class ilPersonalProfileGUI
         
         // standard fields
         $up->addStandardFieldsToForm($this->form, $ilUser, $this->input);
-        
-        $this->addLocationToForm($this->form, $ilUser);
+
+        //fau: delete location
+        //$this->addLocationToForm($this->form, $ilUser);
 
         $this->form->addCommandButton("savePersonalData", $lng->txt("user_save_continue"));
     }
@@ -1247,13 +1248,13 @@ class ilPersonalProfileGUI
         }
 
         // permalink
-        $ne = new ilNonEditableValueGUI($this->lng->txt("perma_link"), "");
+        /*$ne = new ilNonEditableValueGUI($this->lng->txt("perma_link"), "");
         $ne->setValue(ilLink::_getLink($this->user->getId(), "usr"));
         if (!$parent) {
             $form->addItem($ne);
         } else {
             $parent->addSubItem($ne);
-        }
+        }*/
 
     }
     
